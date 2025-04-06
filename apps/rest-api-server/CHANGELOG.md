@@ -1,5 +1,23 @@
 # @blobscan/rest-api-server
 
+## 0.4.9
+
+### Patch Changes
+
+- [#742](https://github.com/Blobscan/blobscan/pull/742) [`4c1c659`](https://github.com/Blobscan/blobscan/commit/4c1c65947589a9d3a2e790409d07a6b94a32f6cf) Thanks [@PJColombo](https://github.com/PJColombo)! - Increased maximum request body size allowed
+
+- Updated dependencies [[`8e4633e`](https://github.com/Blobscan/blobscan/commit/8e4633eee4c0b736819d56ef6dc701d3df42d04d), [`82ca4dd`](https://github.com/Blobscan/blobscan/commit/82ca4dd8b01b275bedbfca5dcc918f6acc4ecfdf), [`82ca4dd`](https://github.com/Blobscan/blobscan/commit/82ca4dd8b01b275bedbfca5dcc918f6acc4ecfdf), [`82ca4dd`](https://github.com/Blobscan/blobscan/commit/82ca4dd8b01b275bedbfca5dcc918f6acc4ecfdf), [`82ca4dd`](https://github.com/Blobscan/blobscan/commit/82ca4dd8b01b275bedbfca5dcc918f6acc4ecfdf)]:
+  - @blobscan/api@0.19.0
+  - @blobscan/syncers@0.3.5
+
+## 0.4.8
+
+### Patch Changes
+
+- Updated dependencies [[`9f88066`](https://github.com/Blobscan/blobscan/commit/9f88066f7445d3bfddc9088fe7078a9d53d9828e), [`242af90`](https://github.com/Blobscan/blobscan/commit/242af90b145ec95277172dc1a74ebb222231e58a), [`b90971b`](https://github.com/Blobscan/blobscan/commit/b90971b1415e32c23c530feff1fc2dd1560d377d), [`95f8043`](https://github.com/Blobscan/blobscan/commit/95f8043f253e83d37e224ccfd63f4c61088af4c2), [`27cddc4`](https://github.com/Blobscan/blobscan/commit/27cddc45aeb593d1dd9a1c693d5bfe69b6569f9a)]:
+  - @blobscan/api@0.18.0
+  - @blobscan/syncers@0.3.4
+
 ## 0.4.7
 
 ### Patch Changes
