@@ -1,37 +1,25 @@
-import type { OverallStats } from "@blobscan/db";
-import { z } from "@blobscan/zod";
+import { OverallStatsModel } from "@blobscan/db/prisma/zod";
 
+import {
+  withStatCategoriesFilterSchema,
+  withStatFilters,
+  withStatRollupsFilterSchema,
+} from "../../middlewares/withStatFilters";
 import { publicProcedure } from "../../procedures";
-import { serializeDecimal } from "../../utils";
-import { BASE_PATH, statsSchema } from "./common";
+import { normalize } from "../../utils";
+import { BASE_PATH } from "./helpers";
 
-const inputSchema = z.void();
+const inputSchema = withStatCategoriesFilterSchema
+  .merge(withStatRollupsFilterSchema)
+  .optional();
 
-const outputSchema = statsSchema.merge(
-  z.object({
-    updatedAt: z.string(),
-  })
-);
+const outputSchema = OverallStatsModel.omit({
+  id: true,
+})
+  .required({ category: true, rollup: true })
+  .array()
+  .transform(normalize);
 
-export function serializeOverallStats({
-  totalBlobSize,
-  totalBlobAsCalldataFee,
-  totalBlobAsCalldataGasUsed,
-  totalBlobFee,
-  totalBlobGasUsed,
-  updatedAt,
-  ...restOverallStats
-}: OverallStats) {
-  return {
-    ...restOverallStats,
-    totalBlobSize: totalBlobSize.toString(),
-    totalBlobAsCalldataFee: serializeDecimal(totalBlobAsCalldataFee),
-    totalBlobAsCalldataGasUsed: serializeDecimal(totalBlobAsCalldataGasUsed),
-    totalBlobFee: serializeDecimal(totalBlobFee),
-    totalBlobGasUsed: serializeDecimal(totalBlobGasUsed),
-    updatedAt: updatedAt.toISOString(),
-  };
-}
 export const getOverallStats = publicProcedure
   .meta({
     openapi: {
@@ -43,36 +31,13 @@ export const getOverallStats = publicProcedure
   })
   .input(inputSchema)
   .output(outputSchema)
-  .query(async ({ ctx }) => {
-    const allOverallStats = await ctx.prisma.overallStats.findMany({
-      where: {
-        category: null,
-        rollup: null,
-      },
+  .use(withStatFilters)
+  .query(async ({ ctx: { prisma, statFilters } }) => {
+    const allOverallStats = await prisma.overallStats.findMany({
+      select: statFilters.select,
+      where: statFilters.where,
+      orderBy: [{ category: "asc" }, { rollup: "asc" }],
     });
 
-    const overallStats = allOverallStats[0];
-
-    if (!overallStats) {
-      return {
-        avgBlobAsCalldataFee: 0,
-        avgBlobFee: 0,
-        avgBlobGasPrice: 0,
-        avgMaxBlobGasFee: 0,
-        totalBlobs: 0,
-        totalBlobSize: "0",
-        totalBlocks: 0,
-        totalTransactions: 0,
-        totalUniqueBlobs: 0,
-        totalUniqueReceivers: 0,
-        totalUniqueSenders: 0,
-        totalBlobAsCalldataFee: "0",
-        totalBlobAsCalldataGasUsed: "0",
-        totalBlobFee: "0",
-        totalBlobGasUsed: "0",
-        updatedAt: new Date().toISOString(),
-      };
-    }
-
-    return serializeOverallStats(overallStats);
+    return allOverallStats;
   });

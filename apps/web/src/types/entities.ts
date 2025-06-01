@@ -1,16 +1,11 @@
+import type { RouterOutputs } from "@blobscan/api";
 import type {
   BlobStorage as BlobStorageEnum,
   Rollup as RollupEnum,
   Category as CategoryEnum,
 } from "@blobscan/api/enums";
 
-import type { MakeFieldRequired } from "./helpers";
-import type {
-  GetAllBlobsOutput,
-  GetByBlobIdOutput,
-  GetByBlockIdOutput,
-  GetTxByHashOutput,
-} from "./routers";
+import type { MakeRequired } from "./helpers";
 
 export type BlobStorage = Lowercase<BlobStorageEnum>;
 
@@ -18,38 +13,30 @@ export type Rollup = Lowercase<RollupEnum>;
 
 export type Category = Lowercase<CategoryEnum>;
 
-export type Blob = GetByBlobIdOutput;
+export type Blob = RouterOutputs["blob"]["getByBlobId"];
 
-export type BlobOnTransaction = GetAllBlobsOutput["blobs"][number];
+export type BlobOnTransaction =
+  RouterOutputs["blob"]["getAll"]["blobs"][number];
 
-export type Block = GetByBlockIdOutput;
+export type Block = RouterOutputs["block"]["getByBlockId"];
 
-export type Transaction = GetTxByHashOutput;
+export type Transaction = RouterOutputs["tx"]["getByHash"];
 
-export type TransactionWithExpandedBlock = MakeFieldRequired<
+export type TransactionWithExpandedBlock = MakeRequired<Transaction, "block">;
+
+export type TransactionWithExpandedBlob = MakeRequired<Transaction, "blobs">;
+
+export type TransactionWithExpandedBlockAndBlob = MakeRequired<
   Transaction,
-  "block" | "blobGasBaseFee"
+  "blobs" | "block"
 >;
 
-export type TransactionWithExpandedBlob = MakeFieldRequired<
-  Transaction,
-  "blobs"
->;
-
-export type TransactionWithExpandedBlockAndBlob = MakeFieldRequired<
-  Transaction,
-  "blobs" | "block" | "blobGasBaseFee"
->;
-
-type BlockExpandedTransactionWithExpandedBlobs = MakeFieldRequired<
+type BlockExpandedTransactionWithExpandedBlobs = MakeRequired<
   Required<Block["transactions"][number]>,
   "blobs"
 >;
 
-export type BlockWithExpandedTransactions = MakeFieldRequired<
-  Block,
-  "transactions"
->;
+export type BlockWithExpandedTransactions = MakeRequired<Block, "transactions">;
 
 export type BlockWithExpandedBlobsAndTransactions = Omit<
   Block,
@@ -58,7 +45,16 @@ export type BlockWithExpandedBlobsAndTransactions = Omit<
   transactions: BlockExpandedTransactionWithExpandedBlobs[];
 };
 
-export type BlobWithExpandedTransaction = MakeFieldRequired<
+export type BlobWithExpandedTransaction = MakeRequired<
   BlobOnTransaction,
   "transaction"
 >;
+
+export type DailyStats = RouterOutputs["stats"]["getDailyStats"][number];
+
+export type DailyStatName = keyof Omit<
+  DailyStats,
+  "day" | "category" | "rollup"
+>;
+
+export type OverallStats = RouterOutputs["stats"]["getOverallStats"][number];

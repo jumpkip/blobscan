@@ -1,87 +1,47 @@
-import { z } from "@blobscan/zod";
+import { DailyStatsModel } from "@blobscan/db/prisma/zod";
 
 import { withSortFilterSchema } from "../../middlewares/withFilters";
 import {
-  withTimeFrame,
-  withTimeFrameSchema,
-} from "../../middlewares/withTimeFrame";
+  withAllStatFiltersSchema,
+  withStatFilters,
+} from "../../middlewares/withStatFilters";
 import { publicProcedure } from "../../procedures";
-import {
-  categorySchema,
-  rollupSchema,
-  serializeCategory,
-  serializeDate,
-  serializeRollup,
-} from "../../utils";
-import { statsSchema } from "./common";
+import { normalize } from "../../utils";
 
-const inputSchema = withTimeFrameSchema.merge(withSortFilterSchema);
-const outputSchema = statsSchema
-  .merge(
-    z.object({
-      day: z.string(),
-      category: categorySchema.nullable(),
-      rollup: rollupSchema.nullable(),
-    })
-  )
-  .array();
+const inputSchema = withAllStatFiltersSchema.merge(withSortFilterSchema);
+
+const outputSchema = DailyStatsModel.omit({
+  id: true,
+})
+  .partial()
+  .required({
+    day: true,
+    category: true,
+    rollup: true,
+  })
+  .array()
+  .transform(normalize);
 
 export const getDailyStats = publicProcedure
   .input(inputSchema)
   .output(outputSchema)
-  .use(withTimeFrame)
-  .query(async ({ ctx: { prisma, timeFrame }, input }) => {
+  .use(withStatFilters)
+  .query(async ({ ctx: { prisma, statFilters }, input }) => {
     const dailyStats = await prisma.dailyStats.findMany({
-      where: {
-        AND: [
-          {
-            day: {
-              gte: timeFrame.initial.toDate(),
-              lte: timeFrame.final.toDate(),
-            },
-          },
-          {
-            category: null,
-          },
-          {
-            rollup: null,
-          },
-        ],
-      },
+      select: statFilters.select,
+      where: statFilters.where,
       orderBy: [
         {
           day: input.sort,
         },
         {
-          category: "desc",
+          category: "asc",
         },
         {
-          rollup: "desc",
+          rollup: "asc",
         },
       ],
     });
 
-    return dailyStats.map(
-      ({
-        day,
-        category,
-        rollup,
-        totalBlobSize,
-        totalBlobAsCalldataFee,
-        totalBlobAsCalldataGasUsed,
-        totalBlobFee,
-        totalBlobGasUsed,
-        ...restStats
-      }) => ({
-        ...restStats,
-        day: serializeDate(day),
-        category: category ? serializeCategory(category) : category,
-        rollup: serializeRollup(rollup),
-        totalBlobSize: totalBlobSize.toString(),
-        totalBlobAsCalldataFee: totalBlobAsCalldataFee.toString(),
-        totalBlobAsCalldataGasUsed: totalBlobAsCalldataGasUsed.toString(),
-        totalBlobFee: totalBlobFee.toString(),
-        totalBlobGasUsed: totalBlobGasUsed.toString(),
-      })
-    );
+    return dailyStats;
   });
